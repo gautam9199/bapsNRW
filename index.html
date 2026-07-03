@@ -5,156 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Indian Students — NRW & Berlin | Interactive Heatmap</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#090d18;--bg2:#0e1522;--bg3:#141c2c;--card:#182030;--card2:#1d2840;
-  --border:rgba(255,255,255,0.07);--accent:#f7931e;--teal:#06d6a0;--blue:#4cc9f0;
-  --pink:#f72585;--purple:#7209b7;--muted:#6b7a99;--text:#e8eaf0;--text2:#b0bcd4;
-  --nrw:#f7931e;--berlin:#4cc9f0;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
-
-/* ── HEADER ── */
-.header{padding:28px 48px 22px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(247,147,30,0.07) 0%,rgba(76,201,240,0.04) 100%);position:relative;overflow:hidden;}
-.header::after{content:'🇮🇳';position:absolute;right:48px;top:12px;font-size:66px;opacity:0.06;}
-.header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
-.header-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;}
-.header h1{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,42px);font-weight:900;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#ffd166 60%,#4cc9f0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.header-sub{margin-top:8px;color:var(--muted);font-size:12px;font-weight:300;max-width:600px;}
-.region-pills{display:flex;gap:10px;align-items:center;flex-shrink:0;}
-.region-pill{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:24px;border:1px solid;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .2s;}
-.pill-nrw{border-color:rgba(247,147,30,0.4);background:rgba(247,147,30,0.08);color:var(--nrw);}
-.pill-nrw.active,.pill-nrw:hover{background:rgba(247,147,30,0.18);}
-.pill-berlin{border-color:rgba(76,201,240,0.4);background:rgba(76,201,240,0.08);color:var(--berlin);}
-.pill-berlin.active,.pill-berlin:hover{background:rgba(76,201,240,0.18);}
-.pill-both{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:var(--text2);}
-.pill-both.active,.pill-both:hover{background:rgba(255,255,255,0.1);}
-.pill-dot{width:8px;height:8px;border-radius:50%;}
-
-.header-stats{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap;align-items:center;}
-.hstat{display:flex;flex-direction:column;gap:2px;}
-.hstat-num{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;line-height:1;}
-.hstat-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;}
-.hdivider{width:1px;background:var(--border);align-self:stretch;}
-
-/* ── LAYOUT ── */
-.main{display:grid;grid-template-columns:360px 1fr;min-height:calc(100vh - 175px);}
-
-/* ── SIDEBAR ── */
-.sidebar{border-right:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 175px);background:var(--bg2);}
-.sidebar::-webkit-scrollbar{width:3px;}
-.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-.sidebar-header{padding:14px 18px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:10;}
-.sidebar-title{font-size:10px;letter-spacing:2px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:8px;}
-.search-box{width:100%;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s;}
-.search-box:focus{border-color:var(--accent);}
-.search-box::placeholder{color:var(--muted);}
-
-/* ── SECTION HEADERS ── */
-.section-header{padding:10px 18px 6px;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
-.section-dot{width:7px;height:7px;border-radius:50%;}
-
-/* ── CITY CARD ── */
-.city-card{padding:10px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:all .18s;position:relative;}
-.city-card:hover,.city-card.active{background:var(--card);}
-.city-card.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;}
-.city-card.active.nrw-card::before{background:var(--nrw);}
-.city-card.active.berlin-card::before{background:var(--berlin);}
-.city-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:5px;}
-.city-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--text);line-height:1.2;}
-.conf-badge{font-size:8px;color:var(--teal);font-family:'DM Mono',monospace;margin-left:4px;}
-.city-badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:20px;font-weight:500;white-space:nowrap;flex-shrink:0;}
-.badge-very-high{background:rgba(155,44,44,0.3);color:#ff8c5a;border:1px solid rgba(155,44,44,0.5);}
-.badge-high{background:rgba(247,147,30,0.2);color:#ffd166;border:1px solid rgba(247,147,30,0.4);}
-.badge-medium{background:rgba(255,209,102,0.12);color:#e2b950;border:1px solid rgba(255,209,102,0.25);}
-.badge-low{background:rgba(107,122,153,0.18);color:var(--muted);border:1px solid rgba(107,122,153,0.3);}
-.badge-very-low{background:rgba(50,60,80,0.25);color:#445066;border:1px solid rgba(50,60,80,0.4);}
-.city-nums{display:flex;gap:12px;margin-bottom:5px;}
-.city-num-item{display:flex;flex-direction:column;gap:1px;}
-.city-num-value{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;line-height:1;}
-.nrw-val{color:var(--nrw);}
-.berlin-val{color:var(--berlin);}
-.city-num-label{font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;}
-.heat-bar{height:4px;border-radius:2px;background:var(--bg3);overflow:hidden;margin-bottom:5px;}
-.heat-fill{height:100%;border-radius:2px;}
-.city-uni-tags{display:flex;flex-wrap:wrap;gap:3px;}
-.uni-tag{font-size:8px;padding:1px 5px;border-radius:3px;border:1px solid;font-family:'DM Mono',monospace;}
-.nrw-tag{background:rgba(247,147,30,0.08);color:#c8780f;border-color:rgba(247,147,30,0.18);}
-.berlin-tag{background:rgba(76,201,240,0.08);color:#2e9fc0;border-color:rgba(76,201,240,0.18);}
-
-/* ── RIGHT PANEL ── */
-.right-panel{display:flex;flex-direction:column;overflow:hidden;}
-
-/* ── MAPS ROW ── */
-.maps-row{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);min-height:380px;}
-.map-pane{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg);}
-.map-pane:first-child{border-right:1px solid var(--border);}
-.map-label{position:absolute;top:12px;left:14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;}
-.map-label.nrw-label{color:rgba(247,147,30,0.6);}
-.map-label.berlin-label{color:rgba(76,201,240,0.6);}
-.map-count{position:absolute;top:12px;right:14px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);}
-
-/* Legend */
-.map-legend{position:absolute;bottom:10px;left:10px;background:rgba(9,13,24,0.88);border:1px solid var(--border);border-radius:8px;padding:8px 12px;backdrop-filter:blur(6px);}
-.map-legend-title{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:5px;}
-.legend-swatches{display:flex;gap:1px;}
-.ls{width:16px;height:6px;border-radius:1px;}
-.legend-minmax{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;width:100px;}
-
-/* Bubbles */
-.city-bubble{cursor:pointer;}
-.city-bubble.selected circle.inner{stroke:white;stroke-width:2;}
-
-/* ── DETAIL PANEL ── */
-.detail-panel{background:var(--bg2);padding:16px 24px;min-height:240px;}
-.detail-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-style:italic;font-size:12px;min-height:220px;}
-.detail-hdr{display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;}
-.detail-region-tag{font-size:9px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:12px;font-weight:600;align-self:flex-start;margin-top:6px;}
-.detail-nrw{background:rgba(247,147,30,0.15);color:var(--nrw);border:1px solid rgba(247,147,30,0.3);}
-.detail-berlin{background:rgba(76,201,240,0.15);color:var(--berlin);border:1px solid rgba(76,201,240,0.3);}
-.detail-city-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;line-height:1.1;}
-.detail-source{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
-.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
-.dstat{background:var(--card);border-radius:7px;padding:10px 12px;border:1px solid var(--border);}
-.dstat-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;line-height:1;margin-bottom:2px;}
-.dstat-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;}
-.detail-info{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-.iblock{background:var(--card);border-radius:7px;padding:10px 12px;border:1px solid var(--border);}
-.iblock-title{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:7px;}
-.gbar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;margin-top:3px;}
-.gfill-m{height:100%;background:linear-gradient(90deg,#4cc9f0,#4895ef);border-radius:3px;}
-.gfill-f{height:100%;background:linear-gradient(90deg,#f72585,#b5179e);border-radius:3px;}
-.grow{margin-bottom:6px;}
-.glabel{display:flex;justify-content:space-between;font-size:9px;font-family:'DM Mono',monospace;color:var(--text2);}
-.clist{display:flex;flex-direction:column;gap:4px;}
-.citem{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);}
-.cdot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
-.ulist{display:flex;flex-direction:column;gap:4px;}
-.uitem{display:flex;align-items:flex-start;gap:5px;font-size:10px;color:var(--text2);line-height:1.35;}
-
-.note-bar{background:rgba(247,147,30,0.06);border:1px solid rgba(247,147,30,0.14);border-radius:7px;padding:8px 14px;font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.6;margin:0 0 0 0;}
-.note-bar strong{color:var(--accent);}
-
-/* Comparison bar at header level */
-.compare-strip{display:flex;gap:16px;padding:10px 48px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.cstrip-item{display:flex;flex-direction:column;gap:2px;}
-.cstrip-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;}
-.cstrip-bars{display:flex;align-items:center;gap:6px;}
-.cstrip-bar{height:10px;border-radius:2px;min-width:4px;}
-.cstrip-val{font-size:10px;font-family:'DM Mono',monospace;}
-.nrw-color{color:var(--nrw);}
-.berlin-color{color:var(--berlin);}
-
-@media(max-width:900px){
-  .main{grid-template-columns:1fr;}
-  .sidebar{max-height:360px;}
-  .maps-row{grid-template-columns:1fr;}
-  .detail-grid{grid-template-columns:1fr 1fr;}
-  .detail-info{grid-template-columns:1fr 1fr;}
-}
-</style>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -163,7 +14,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div>
       <div class="header-label">Interactive Heatmap · Germany · WS 2024/25</div>
       <h1>Indian Students in Germany<br><span style="-webkit-text-fill-color:var(--nrw)">NRW</span> <span style="-webkit-text-fill-color:rgba(255,255,255,0.3);font-size:0.7em">&amp;</span> <span style="-webkit-text-fill-color:var(--berlin)">Berlin</span></h1>
-      <div class="header-sub">Two of Germany's largest student regions — side by side. Data from DAAD, Destatis, Berlin-Brandenburg Statistics Office, university press releases.</div>
+      <div class="header-sub">Two of Germany's largest student regions — plotted on a single zoomable map. Data from DAAD, Destatis, Berlin-Brandenburg Statistics Office, university press releases.</div>
     </div>
     <div class="region-pills">
       <div class="region-pill pill-both active" id="pillBoth" onclick="filterRegion('both')"><span class="pill-dot" style="background:linear-gradient(135deg,var(--nrw),var(--berlin))"></span>Both Regions</div>
@@ -223,423 +74,63 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
   <!-- RIGHT -->
   <div class="right-panel">
-    <!-- MAPS -->
+    <!-- MAP -->
     <div class="maps-row">
-      <!-- NRW MAP -->
-      <div class="map-pane" id="nrwPane">
-        <div class="map-label nrw-label">NRW · Nordrhein-Westfalen</div>
-        <div class="map-count" id="nrwCount">22 cities</div>
-        <svg id="nrwMap" viewBox="0 0 600 680" style="width:100%;max-height:380px;"></svg>
-        <div class="map-legend">
-          <div class="map-legend-title">Indian Students</div>
-          <div class="legend-swatches">
-            <div class="ls" style="background:#c8dde8"></div>
-            <div class="ls" style="background:#fff3c4"></div>
-            <div class="ls" style="background:#ffd166"></div>
-            <div class="ls" style="background:#f7931e"></div>
-            <div class="ls" style="background:#e85d04"></div>
-            <div class="ls" style="background:#9b2c2c"></div>
-          </div>
-          <div class="legend-minmax"><span>&lt;100</span><span>500</span><span>1k</span><span>2k+</span></div>
+      <div class="map-pane" id="germanyPane">
+        <div class="map-label">Germany · scroll to zoom, drag to pan</div>
+        <div class="map-count" id="mapCount">31 locations</div>
+        <svg id="germanyMap"><g id="mapLayer"></g></svg>
+        <div class="map-tooltip" id="mapTooltip"></div>
+        <div class="map-controls">
+          <button class="map-ctrl-btn" id="zoomInBtn" title="Zoom in">+</button>
+          <button class="map-ctrl-btn" id="zoomOutBtn" title="Zoom out">−</button>
+          <button class="map-ctrl-btn map-ctrl-reset" id="zoomResetBtn" title="Reset view">⤢</button>
         </div>
-      </div>
-      <!-- BERLIN MAP -->
-      <div class="map-pane" id="berlinPane">
-        <div class="map-label berlin-label">Berlin Region · & Brandenburg</div>
-        <div class="map-count" id="berlinCount">9 zones</div>
-        <svg id="berlinMap" viewBox="0 0 480 520" style="width:100%;max-height:380px;"></svg>
         <div class="map-legend">
-          <div class="map-legend-title">Indian Students</div>
-          <div class="legend-swatches">
-            <div class="ls" style="background:#c8dde8"></div>
-            <div class="ls" style="background:#a8d8f0"></div>
-            <div class="ls" style="background:#4cc9f0"></div>
-            <div class="ls" style="background:#0099cc"></div>
-            <div class="ls" style="background:#006699"></div>
-            <div class="ls" style="background:#003355"></div>
+          <div class="map-legend-col">
+            <div class="map-legend-title">NRW · Indians</div>
+            <div class="legend-swatches">
+              <div class="ls" style="background:#c8dde8"></div>
+              <div class="ls" style="background:#fff3c4"></div>
+              <div class="ls" style="background:#ffd166"></div>
+              <div class="ls" style="background:#f7931e"></div>
+              <div class="ls" style="background:#e85d04"></div>
+              <div class="ls" style="background:#9b2c2c"></div>
+            </div>
+            <div class="legend-minmax"><span>&lt;100</span><span>500</span><span>1k</span><span>2k+</span></div>
           </div>
-          <div class="legend-minmax"><span>&lt;50</span><span>200</span><span>500</span><span>1k+</span></div>
+          <div class="map-legend-col">
+            <div class="map-legend-title">Berlin · Indians</div>
+            <div class="legend-swatches">
+              <div class="ls" style="background:#c8dde8"></div>
+              <div class="ls" style="background:#a8d8f0"></div>
+              <div class="ls" style="background:#4cc9f0"></div>
+              <div class="ls" style="background:#0099cc"></div>
+              <div class="ls" style="background:#006699"></div>
+              <div class="ls" style="background:#003355"></div>
+            </div>
+            <div class="legend-minmax"><span>&lt;50</span><span>200</span><span>500</span><span>1k+</span></div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- DETAIL -->
     <div class="detail-panel" id="detailPanel">
-      <div class="detail-empty">← Select any city from the list or click a bubble on either map</div>
+      <div class="detail-empty">← Select any city from the list or click a bubble on the map</div>
     </div>
   </div>
 </div>
 
 <div style="padding:8px 48px 14px;background:var(--bg2);border-top:1px solid var(--border)">
   <div class="note-bar">
-    <strong>Data notes:</strong> Confirmed: RWTH Aachen (2,366 Indians — Dec 2024), TU Dortmund (466 — Mar 2025), Berlin total intl students 49,801 / 24.8% of 200,852 (Amt für Statistik Berlin-Brandenburg, WS 2024/25). TU Berlin: 10,000+ foreign nationals enrolled (Shiksha/TU Berlin, WS 2024/25); India estimated as 2nd largest group after China (~18% of intl = ~1,800). All other figures are weighted estimates using DAAD national data (59,419 Indian students, WS 2024/25), regional shares, and university-level international ratios. Berlin region share estimated at ~7% of national Indian total based on Berlin's 24.8% overall international student share × India's national prominence, scaled for German-language requirement barriers at HU/FU. Gender: national DAAD average (~70% male / 30% female). <strong>Sources: DAAD 2024, Destatis, Amt für Statistik Berlin-Brandenburg, RWTH Aachen, TU Dortmund, TU Berlin, Shiksha.</strong>
+    <strong>Data notes:</strong> Confirmed: RWTH Aachen (2,366 Indians — Dec 2024), TU Dortmund (466 — Mar 2025), Berlin total intl students 49,801 / 24.8% of 200,852 (Amt für Statistik Berlin-Brandenburg, WS 2024/25). TU Berlin: 10,000+ foreign nationals enrolled (Shiksha/TU Berlin, WS 2024/25); India estimated as 2nd largest group after China (~18% of intl = ~1,800). All other figures are weighted estimates using DAAD national data (59,419 Indian students, WS 2024/25), regional shares, and university-level international ratios. Berlin region share estimated at ~7% of national Indian total based on Berlin's 24.8% overall international student share × India's national prominence, scaled for German-language requirement barriers at HU/FU. Gender: national DAAD average (~70% male / 30% female). Map: state boundaries are simplified administrative borders from the open-source isellsoap/deutschlandGeoJSON project (derived from DIVA-GIS public data), not survey-grade GIS. <strong>Sources: DAAD 2024, Destatis, Amt für Statistik Berlin-Brandenburg, RWTH Aachen, TU Dortmund, TU Berlin, Shiksha, isellsoap/deutschlandGeoJSON.</strong>
   </div>
 </div>
 
-<script>
-// ────────────────────────────────────────────────────────────────────────────
-// DATA
-// ────────────────────────────────────────────────────────────────────────────
-
-const NRW = [
-  {id:'aachen',name:'Aachen',region:'nrw',x:82,y:430,indianStudents:2366,totalIntl:15270,totalStudents:44892,pctIndian:15.5,gender:{male:72,female:28},tier:'very-high',confirmed:true,
-   universities:['RWTH Aachen University','FH Aachen (UAS)','H-BRS Aachen-Bonn IT Center'],
-   courses:['Mechanical Engineering','Computer Science','Electrical Engineering','Aerospace Engineering','Materials Science'],
-   notes:'RWTH Aachen is Germany\'s 2nd-largest technical university. India is 2nd-largest international group (after China). 2,366 Indians confirmed for WS 2024/25.',
-   source:'RWTH Aachen Press Release Dec 2024 ✅'},
-  {id:'cologne',name:'Cologne (Köln)',region:'nrw',x:188,y:502,indianStudents:1400,totalIntl:5000,totalStudents:43594,pctIndian:28,gender:{male:65,female:35},tier:'high',
-   universities:['University of Cologne','TH Köln (Technical University Cologne)','German Sport University Cologne','FOM Köln'],
-   courses:['Business Administration','Information Systems','Economics','Computer Science','Physics'],
-   notes:'University of Cologne has 5,000+ international students across 6 faculties. TH Köln is NRW\'s largest UAS. Strong Indian presence in business, CS and sciences.',source:'Uni Cologne / Shiksha 2024 (est.)'},
-  {id:'duisburg',name:'Duisburg',region:'nrw',x:205,y:348,indianStudents:700,totalIntl:5500,totalStudents:25000,pctIndian:12.7,gender:{male:68,female:32},tier:'medium',
-   universities:['University of Duisburg-Essen (Duisburg campus)','Hochschule Ruhr West'],
-   courses:['Technical Systems Management','Mechatronics','Environmental Engineering','Business Informatics'],
-   notes:'UDE Duisburg campus focuses on engineering. No tuition fees. Hochschule Ruhr West (Mülheim/Bottrop) nearby adds applied programs.',source:'UDE International Office (est.)'},
-  {id:'essen',name:'Essen',region:'nrw',x:242,y:344,indianStudents:600,totalIntl:4200,totalStudents:30000,pctIndian:14.3,gender:{male:67,female:33},tier:'medium',
-   universities:['University of Duisburg-Essen (Essen campus)','FOM University of Applied Sciences HQ','Folkwang University of the Arts'],
-   courses:['Business Informatics','Medicine & Health Sciences','Computer Science','Economics','Arts & Design'],
-   notes:'FOM (Germany\'s largest private uni, 47,000+ students, HQ Essen) has significant Indian evening/weekend program enrollment. UDE Essen campus strong in medicine.',source:'UDE Essen / FOM 2024 (est.)'},
-  {id:'bochum',name:'Bochum',region:'nrw',x:268,y:326,indianStudents:750,totalIntl:6500,totalStudents:38872,pctIndian:11.5,gender:{male:69,female:31},tier:'medium',
-   universities:['Ruhr University Bochum (RUB)','Hochschule Bochum','Westfälische Hochschule (Bochum)'],
-   courses:['Computational Engineering','Mechanical Engineering','Applied Computer Science','Sales Engineering','Physics'],
-   notes:'RUB has ~6,500 international students from 130 countries. Popular Indian MS: Computational Engineering, Mechanical Engineering, Applied CS.',source:'RUB / Goethe Institut 2024 (est.)'},
-  {id:'dortmund',name:'Dortmund',region:'nrw',x:318,y:308,indianStudents:466,totalIntl:3800,totalStudents:34500,pctIndian:12.3,gender:{male:70,female:30},tier:'medium',confirmed:true,
-   universities:['TU Dortmund University','FH Dortmund','ISM International School of Management'],
-   courses:['Automation & Robotics','Data Science','Computer Science','Sustainable Energy Systems','Chemical Engineering'],
-   notes:'Indians are #1 international group at TU Dortmund, ahead of China & Turkey. ~90% in Master\'s programs. 30% female ratio. 68 graduates in 2023/24.',
-   source:'TU Dortmund Official Report Mar 2025 ✅'},
-  {id:'duesseldorf',name:'Düsseldorf',region:'nrw',x:220,y:430,indianStudents:680,totalIntl:5500,totalStudents:48000,pctIndian:12.4,gender:{male:63,female:37},tier:'medium',
-   universities:['Heinrich Heine University (HHU)','Hochschule Düsseldorf (HSD)','FOM Düsseldorf'],
-   courses:['Business Administration','Medical Informatics','Computer Science','Social Sciences','Media & Design'],
-   notes:'NRW state capital. HSD is 2nd-largest UAS in NRW. HHU strong for medicine & natural sciences. Indian students mainly in business/IT.',source:'HSD / HHU 2024 (est.)'},
-  {id:'bonn',name:'Bonn',region:'nrw',x:188,y:550,indianStudents:900,totalIntl:4200,totalStudents:31318,pctIndian:21.4,gender:{male:66,female:34},tier:'medium',
-   universities:['University of Bonn','H-BRS Bonn-Rhine-Sieg UAS (Sankt Augustin/Rheinbach/Hennef)'],
-   courses:['Life & Medical Sciences','Mathematics','Computer Science','Agricultural Sciences','Physics'],
-   notes:'Uni Bonn is an Excellence Initiative member with 5 Clusters. H-BRS (9,000 students) has strong IGCHE programme. Indian CS & engineering students particularly at Sankt Augustin.',source:'Uni Bonn / H-BRS 2024 (est.)'},
-  {id:'muenster',name:'Münster',region:'nrw',x:270,y:194,indianStudents:520,totalIntl:3200,totalStudents:43098,pctIndian:16.3,gender:{male:64,female:36},tier:'medium',
-   universities:['University of Münster (WWU)','FH Münster'],
-   courses:['Law','Business Administration','Mathematics','Chemistry','IT & Computer Science'],
-   notes:'WWU ranks 3rd-best German university (Leiden ranking). 43,000+ students. Growing Indian community in business & sciences.',source:'Uni Münster 2024 (est.)'},
-  {id:'bielefeld',name:'Bielefeld',region:'nrw',x:350,y:173,indianStudents:350,totalIntl:2600,totalStudents:27000,pctIndian:13.5,gender:{male:67,female:33},tier:'low',
-   universities:['University of Bielefeld','FH Bielefeld (Hochschule Bielefeld)'],
-   courses:['Intelligent Systems','Data Science','Cognitive Informatics','Biotechnology','Business Informatics'],
-   notes:'Bielefeld University known for interdisciplinary research & Intelligent Systems. Growing Indian student community.',source:'Uni Bielefeld / CHE 2024 (est.)'},
-  {id:'wuppertal',name:'Wuppertal',region:'nrw',x:248,y:406,indianStudents:280,totalIntl:2200,totalStudents:21000,pctIndian:12.7,gender:{male:70,female:30},tier:'low',
-   universities:['Bergische Universität Wuppertal (BUW)'],
-   courses:['Electrical Engineering','Computer Engineering','Mathematics','Civil Engineering','Safety Engineering'],
-   notes:'BUW is growing for Indian engineering students. Affordable living vs. nearby Cologne/Düsseldorf. Distinctive Safety Engineering program.',source:'BUW 2024 (est.)'},
-  {id:'paderborn',name:'Paderborn',region:'nrw',x:378,y:225,indianStudents:220,totalIntl:1800,totalStudents:20000,pctIndian:12.2,gender:{male:71,female:29},tier:'low',
-   universities:['University of Paderborn'],
-   courses:['Computer Science','Electrical Engineering','Mechatronics','Business Computing','Mathematics'],
-   notes:'Strong CS & EE reputation. Mid-size destination for Indian tech students with lower cost of living.',source:'Uni Paderborn / DAAD 2024 (est.)'},
-  {id:'siegen',name:'Siegen',region:'nrw',x:306,y:482,indianStudents:160,totalIntl:1400,totalStudents:18618,pctIndian:11.4,gender:{male:69,female:31},tier:'low',
-   universities:['University of Siegen'],
-   courses:['Mechanical Engineering','Electrical Engineering','Computer Science','Media Studies','Economics'],
-   notes:'Active Indian Student Association (inaugurated by Embassy of India). Lower living costs in Siegerland region.',source:'Uni Siegen / Embassy of India 2024 (est.)'},
-  {id:'krefeld',name:'Krefeld / Mönchengladbach',region:'nrw',x:157,y:388,indianStudents:190,totalIntl:1600,totalStudents:13085,pctIndian:11.9,gender:{male:65,female:35},tier:'low',
-   universities:['Hochschule Niederrhein (HS Niederrhein)'],
-   courses:['Electrical Engineering & CS','Business Administration','Chemistry','Design','Social Studies'],
-   notes:'HS Niederrhein has 13,000+ students across Krefeld and Mönchengladbach. Industry-oriented applied programs.',source:'HS Niederrhein 2024 (est.)'},
-  {id:'hagen',name:'Hagen',region:'nrw',x:295,y:378,indianStudents:210,totalIntl:2800,totalStudents:70000,pctIndian:7.5,gender:{male:68,female:32},tier:'low',
-   universities:['FernUniversität in Hagen (Distance Uni)','FH Südwestfalen (Hagen campus)'],
-   courses:['Computer Science','Mathematics','Law','Business Administration','Electrical Engineering'],
-   notes:'FernUniversität is Germany\'s largest university (70,000+ students) — entirely distance learning. Lower Indian enrollment due to German-language requirements, but growing.',source:'FernUniversität 2024 (est.)'},
-  {id:'hamm',name:'Hamm / Lippstadt',region:'nrw',x:342,y:292,indianStudents:95,totalIntl:580,totalStudents:4700,pctIndian:16.4,gender:{male:70,female:30},tier:'very-low',
-   universities:['Hochschule Hamm-Lippstadt (HSHL)'],
-   courses:['Electronic Engineering','Electrical Engineering','Computer Science','Environmental Engineering','Business'],
-   notes:'HSHL (founded 2009, ~4,700 students). Small but growing Indian community. Hands-on engineering programs across Hamm and Lippstadt campuses.',source:'HSHL 2024 (est.)'},
-  {id:'gelsenkirchen',name:'Gelsenkirchen',region:'nrw',x:252,y:294,indianStudents:130,totalIntl:765,totalStudents:9000,pctIndian:17,gender:{male:71,female:29},tier:'low',
-   universities:['Westfälische Hochschule (WH) — Gelsenkirchen, Bocholt, Recklinghausen'],
-   courses:['Computer Science','Mechanical Engineering','Energy Systems','Bioengineering','Mechatronics'],
-   notes:'WH (~9,000 students, ~8.5% international) is part of IGCHE Indo-German engineering programme. Gelsenkirchen known as "Solar City" with strong renewable energy focus.',source:'Westfälische Hochschule / IGCHE 2024 (est.)'},
-  {id:'iserlohn',name:'Iserlohn / Meschede / Soest',region:'nrw',x:330,y:378,indianStudents:140,totalIntl:1200,totalStudents:12000,pctIndian:11.7,gender:{male:69,female:31},tier:'low',
-   universities:['Fachhochschule Südwestfalen (5 campuses)'],
-   courses:['Mechanical Engineering','Electrical Engineering','Agriculture','Computer Science','Business Management'],
-   notes:'FH Südwestfalen spans Iserlohn (main), Hagen, Meschede, Soest & Lüdenscheid. Growing Indian cohort across engineering and agriculture programs.',source:'FH Südwestfalen 2024 (est.)'},
-  {id:'kleve',name:'Kleve / Kamp-Lintfort',region:'nrw',x:112,y:302,indianStudents:120,totalIntl:1400,totalStudents:7500,pctIndian:8.6,gender:{male:66,female:34},tier:'low',
-   universities:['Hochschule Rhein-Waal (Kleve & Kamp-Lintfort)'],
-   courses:['Life Sciences','Technology & Bionics','Society & Economics','Digital Technologies','Agri-Horticulture'],
-   notes:'HS Rhein-Waal notable for high international student share and English-taught programs near Dutch border. Growing Indian presence.',source:'HS Rhein-Waal 2024 (est.)'},
-  {id:'steinfurt',name:'Steinfurt',region:'nrw',x:240,y:180,indianStudents:110,totalIntl:980,totalStudents:14000,pctIndian:11.2,gender:{male:68,female:32},tier:'very-low',
-   universities:['FH Münster (Steinfurt & Münster campuses)'],
-   courses:['Civil Engineering','Electrical Engineering','Environmental Engineering','Business','Social Work'],
-   notes:'FH Münster is a large NRW UAS. Steinfurt campus focuses on technical disciplines. Indian students mainly in engineering programs.',source:'FH Münster 2024 (est.)'},
-  {id:'lemgo',name:'Lemgo / Detmold / Höxter',region:'nrw',x:398,y:192,indianStudents:80,totalIntl:620,totalStudents:5672,pctIndian:12.9,gender:{male:67,female:33},tier:'very-low',
-   universities:['TH OWL — Technische Hochschule Ostwestfalen-Lippe'],
-   courses:['Mechanical Engineering','Electrical Engineering','Architecture & Design','Agri-Food-Health','Media & Culture'],
-   notes:'TH OWL (5,672 students) spans Lemgo, Detmold & Höxter. Detmold has the "Detmold School of Design." Small Indian cohort mainly in engineering.',source:'TH OWL 2024 (est.)'},
-  {id:'gummersbach',name:'Gummersbach',region:'nrw',x:232,y:474,indianStudents:115,totalIntl:1050,totalStudents:11500,pctIndian:10.9,gender:{male:69,female:31},tier:'very-low',
-   universities:['TH Köln — Gummersbach Campus (CS & Engineering)'],
-   courses:['Computer Science','Media Informatics','Electrical Engineering','Mechanical Engineering','Automation'],
-   notes:'TH Köln\'s Gummersbach campus specialises in CS and Engineering. Indian students who prefer quieter campus life near Cologne.',source:'TH Köln 2024 (est.)'},
-  {id:'juelich',name:'Jülich',region:'nrw',x:130,y:456,indianStudents:90,totalIntl:820,totalStudents:5000,pctIndian:11,gender:{male:73,female:27},tier:'very-low',
-   universities:['FH Aachen — Jülich Campus','Forschungszentrum Jülich (FZJ — research/PhD)'],
-   courses:['Energy Technology','Biomedical Engineering','Scientific Programming','Physics','Chemistry'],
-   notes:'Jülich has one of Europe\'s largest research centres (FZJ) attracting Indian PhD researchers. FH Aachen Jülich campus specialises in energy & biomedical tech.',source:'FH Aachen Jülich / FZJ 2024 (est.)'},
-];
-
-const BERLIN = [
-  {id:'tu-berlin',name:'TU Berlin (Charlottenburg)',region:'berlin',x:200,y:220,indianStudents:1800,totalIntl:10000,totalStudents:33000,pctIndian:18,gender:{male:74,female:26},tier:'very-high',
-   universities:['Technische Universität Berlin (TU Berlin)'],
-   courses:['Computer Science','Electrical Engineering','Mechanical Engineering','Architecture','Innovation Management & Entrepreneurship'],
-   notes:'TU Berlin has 10,000+ foreign nationals (WS 2024/25) — one of highest intl % in Germany (>25%). India is among top 3 source countries. Strong MS programs in English. TU9 member & Excellence University.',
-   source:'TU Berlin / Shiksha WS 2024/25 (est. ~18% of intl = India)'},
-  {id:'fu-berlin',name:'FU Berlin (Dahlem)',region:'berlin',x:178,y:290,indianStudents:620,totalIntl:6000,totalStudents:35000,pctIndian:10.3,gender:{male:58,female:42},tier:'medium',
-   universities:['Freie Universität Berlin (FU Berlin)','Charité — Universitätsmedizin Berlin (joint)'],
-   courses:['Life Sciences','Social Sciences','Humanities','Mathematics & CS','Law'],
-   notes:'FU Berlin is an Excellence Initiative university (Berlin University Alliance). Strong for humanities, social & life sciences. Higher female ratio than other German universities. Charité partnership for medicine.',
-   source:'FU Berlin 2024 (est.)'},
-  {id:'hu-berlin',name:'HU Berlin (Mitte)',region:'berlin',x:222,y:230,indianStudents:480,totalIntl:6013,totalStudents:34540,pctIndian:8,gender:{male:60,female:40},tier:'medium',
-   universities:['Humboldt-Universität zu Berlin (HU Berlin)'],
-   courses:['Philosophy & Humanities','Law','Life Sciences','Business & Economics','Mathematics & Natural Sciences'],
-   notes:'HU Berlin (founded 1810) is one of Europe\'s most prestigious universities. 6,013 international students (17.4% of 34,540). German-language requirement limits Indian enrollment vs. TU Berlin.',
-   source:'HU Berlin / Collegedunia Apr 2026 (est.)'},
-  {id:'htw-berlin',name:'HTW Berlin (Karlshorst)',region:'berlin',x:268,y:248,indianStudents:520,totalIntl:4000,totalStudents:15000,pctIndian:13,gender:{male:68,female:32},tier:'medium',
-   universities:['HTW Berlin — Hochschule für Technik und Wirtschaft (UAS)','Beuth University of Applied Sciences (BHT)'],
-   courses:['Mechanical Engineering','Automotive Engineering','Business Administration','Game Design','Facility Management'],
-   notes:'HTW Berlin is the largest UAS in Berlin (15,000 students, 25% international). Beuth/BHT has 12,000+ students strong in technology & engineering. Both attract Indian engineering students.',
-   source:'HTW Berlin / MyGermanUniversity 2024 (est.)'},
-  {id:'hwr-berlin',name:'HWR Berlin (Schöneberg)',region:'berlin',x:196,y:258,indianStudents:310,totalIntl:3200,totalStudents:11000,pctIndian:9.7,gender:{male:62,female:38},tier:'low',
-   universities:['HWR Berlin — Berlin School of Economics & Law'],
-   courses:['Business Administration','MBA & MIM','Public Administration','Security Management','Law'],
-   notes:'HWR Berlin offers strong English-taught MBA & MIM programs. Attracts Indian business students. Located in Schöneberg (West Berlin) and Lichtenberg (East Berlin) campuses.',
-   source:'HWR Berlin / MyGermanUniversity 2024 (est.)'},
-  {id:'esmt-berlin',name:'ESMT & Private Unis (Berlin)',region:'berlin',x:230,y:215,indianStudents:190,totalIntl:2200,totalStudents:5000,pctIndian:8.6,gender:{male:65,female:35},tier:'low',
-   universities:['ESMT Berlin (Business School)','SRH Berlin University of Applied Sciences','Berlin International UAS','GISMA Business School'],
-   courses:['MBA & Executive MBA','Entrepreneurship','Computer Science','Media & Design','Finance'],
-   notes:'ESMT Berlin is a triple-accredited business school attracting Indian MBA students. SRH Berlin is fully English-taught, popular with Indian undergrads. GISMA has practical business programs.',
-   source:'ESMT / SRH Berlin 2024 (est.)'},
-  {id:'udk-berlin',name:'UdK & Arts (Berlin)',region:'berlin',x:186,y:242,indianStudents:95,totalIntl:1400,totalStudents:3500,pctIndian:6.8,gender:{male:44,female:56},tier:'very-low',
-   universities:['Universität der Künste Berlin (UdK)','Kunsthochschule Berlin-Weißensee','Hochschule für Schauspielkunst "Ernst Busch"'],
-   courses:['Fine Arts','Music','Architecture & Design','Performing Arts','Visual Communication'],
-   notes:'UdK is Europe\'s largest art university. Relatively smaller Indian student community but present in design & architecture. Higher female ratio in arts.',
-   source:'UdK Berlin 2024 (est.)'},
-  {id:'potsdam',name:'Potsdam (Brandenburg)',region:'berlin',x:148,y:340,indianStudents:210,totalIntl:2800,totalStudents:21000,pctIndian:7.5,gender:{male:65,female:35},tier:'low',
-   universities:['University of Potsdam','HPI — Hasso Plattner Institute'],
-   courses:['Computer Science & IT Systems','Digital Engineering','Business & Economics','Cognitive Sciences','Life Sciences'],
-   notes:'University of Potsdam (21,000 students) is 20 min from Berlin by train. HPI is a world-class digital engineering school (linked to SAP). Growing Indian presence especially in IT/CS programs.',
-   source:'Uni Potsdam / HPI 2024 (est.)'},
-  {id:'brandenburgtech',name:'Brandenburg an der Havel',region:'berlin',x:100,y:286,indianStudents:85,totalIntl:950,totalStudents:8500,pctIndian:8.9,gender:{male:71,female:29},tier:'very-low',
-   universities:['Brandenburg University of Technology (BTU Cottbus-Senftenberg)','Technische Hochschule Brandenburg'],
-   courses:['Environmental & Resource Management','Electrical Engineering','Computer Science','Business Administration','Architecture'],
-   notes:'BTU Cottbus-Senftenberg and TH Brandenburg attract Indian engineering students seeking lower costs and quieter campus environments within the Berlin commuter zone.',
-   source:'BTU / TH Brandenburg 2024 (est.)'},
-];
-
-const ALL = [...NRW,...BERLIN];
-const maxNRW = Math.max(...NRW.map(c=>c.indianStudents));
-const maxBerlin = Math.max(...BERLIN.map(c=>c.indianStudents));
-
-let currentFilter = 'both';
-let selectedCity = null;
-
-function heatNRW(n){
-  if(n>=2000)return'#9b2c2c';
-  if(n>=1200)return'#c1440e';
-  if(n>=700)return'#e85d04';
-  if(n>=400)return'#f7931e';
-  if(n>=200)return'#ffd166';
-  if(n>=100)return'#fff3c4';
-  return'#c8dde8';
-}
-function heatBerlin(n){
-  if(n>=1500)return'#003355';
-  if(n>=800)return'#006699';
-  if(n>=400)return'#0099cc';
-  if(n>=200)return'#4cc9f0';
-  if(n>=100)return'#a8d8f0';
-  return'#c8dde8';
-}
-
-// ── SIDEBAR ──────────────────────────────────────────────────────────────────
-function buildSidebar(filter=''){
-  const list=document.getElementById('cityList');
-  list.innerHTML='';
-  const fl=filter.toLowerCase();
-  function renderSection(label,color,cities){
-    if(cities.filter(c=>!fl||(c.name.toLowerCase().includes(fl)||c.universities.join(' ').toLowerCase().includes(fl))).length===0)return;
-    const sh=document.createElement('div');
-    sh.className='section-header';
-    sh.innerHTML=`<div class="section-dot" style="background:${color}"></div>${label}`;
-    list.appendChild(sh);
-    const sorted=[...cities].sort((a,b)=>b.indianStudents-a.indianStudents);
-    sorted.forEach(city=>{
-      if(fl&&!city.name.toLowerCase().includes(fl)&&!city.universities.join(' ').toLowerCase().includes(fl))return;
-      const hf=city.region==='nrw'?heatNRW:heatBerlin;
-      const mx=city.region==='nrw'?maxNRW:maxBerlin;
-      const pct=(city.indianStudents/mx*100).toFixed(0);
-      const tagClass=city.region==='nrw'?'nrw-tag':'berlin-tag';
-      const valClass=city.region==='nrw'?'nrw-val':'berlin-val';
-      const div=document.createElement('div');
-      div.className=`city-card ${city.region}-card`+(selectedCity===city.id?' active':'');
-      div.dataset.id=city.id;
-      div.innerHTML=`
-        <div class="city-card-top">
-          <div class="city-name">${city.name}${city.confirmed?'<span class="conf-badge">✓</span>':''}</div>
-          <span class="city-badge badge-${city.tier}">${city.tier.replace('-',' ')}</span>
-        </div>
-        <div class="city-nums">
-          <div class="city-num-item"><div class="city-num-value ${valClass}">${city.indianStudents.toLocaleString()}</div><div class="city-num-label">INDIAN</div></div>
-          <div class="city-num-item"><div class="city-num-value" style="color:var(--muted)">${city.totalIntl.toLocaleString()}</div><div class="city-num-label">TOTAL INTL</div></div>
-          <div class="city-num-item"><div class="city-num-value" style="color:var(--text2)">${city.gender.female}%F</div><div class="city-num-label">FEMALE</div></div>
-        </div>
-        <div class="heat-bar"><div class="heat-fill" style="width:${pct}%;background:${hf(city.indianStudents)}"></div></div>
-        <div class="city-uni-tags">${city.universities.slice(0,2).map(u=>`<span class="uni-tag ${tagClass}">${u.split('(')[0].trim().split(' ').slice(0,4).join(' ')}</span>`).join('')}${city.universities.length>2?`<span class="uni-tag ${tagClass}">+${city.universities.length-2}</span>`:''}</div>`;
-      div.addEventListener('click',()=>selectCity(city.id));
-      list.appendChild(div);
-    });
-  }
-  if(currentFilter!=='berlin') renderSection('NRW — Nordrhein-Westfalen','var(--nrw)',NRW);
-  if(currentFilter!=='nrw')    renderSection('Berlin Region','var(--berlin)',BERLIN);
-}
-
-// ── MAPS ─────────────────────────────────────────────────────────────────────
-function buildNRWMap(){
-  const svg=document.getElementById('nrwMap');
-  const nrwPath=`M 130,60 L 210,38 L 295,44 L 395,54 L 465,82 L 515,126 L 525,200
-    L 502,270 L 508,342 L 486,414 L 446,472 L 406,542 L 353,592 L 293,622
-    L 228,612 L 160,582 L 106,542 L 66,482 L 42,402 L 38,320 L 56,240 L 76,158 Z`;
-  svg.innerHTML=`<defs>
-    <radialGradient id="ng" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#182030"/><stop offset="100%" stop-color="#0e1522"/></radialGradient>
-    <filter id="ng1"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="ns"><feDropShadow dx="0" dy="3" stdDeviation="7" flood-color="rgba(0,0,0,0.5)"/></filter>
-  </defs>
-  <path d="${nrwPath}" fill="url(#ng)" stroke="rgba(247,147,30,0.12)" stroke-width="1.5" filter="url(#ns)"/>
-  ${[100,200,300,400,500,600].map(y=>`<line x1="38" y1="${y}" x2="528" y2="${y}" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>`).join('')}
-  ${[100,200,300,400,500].map(x=>`<line x1="${x}" y1="38" x2="${x}" y2="630" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>`).join('')}
-  <path d="M 80,550 Q 130,518 155,488 Q 175,455 185,415 Q 195,378 200,340 Q 205,300 195,262 Q 185,225 174,185" fill="none" stroke="rgba(76,201,240,0.15)" stroke-width="2" stroke-dasharray="5,4"/>`;
-  NRW.forEach(city=>{
-    const r=7+(city.indianStudents/maxNRW)*28;
-    const col=heatNRW(city.indianStudents);
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.classList.add('city-bubble');
-    g.dataset.id=city.id;
-    g.innerHTML=`
-      <circle cx="${city.x}" cy="${city.y}" r="${r+7}" fill="${col}" opacity="0.09"/>
-      <circle class="inner" cx="${city.x}" cy="${city.y}" r="${r}" fill="${col}" opacity="0.88" filter="url(#ng1)"/>
-      <text x="${city.x}" y="${city.y+3}" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-size="${Math.max(7,r*0.45)}" font-family="DM Mono,monospace" font-weight="600" pointer-events="none">${city.indianStudents>=1000?(city.indianStudents/1000).toFixed(1)+'k':city.indianStudents}</text>
-      <text x="${city.x}" y="${city.y+r+12}" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="8" font-family="DM Sans,sans-serif" pointer-events="none">${city.name.split('/')[0].split('(')[0].trim()}</text>`;
-    g.addEventListener('click',()=>selectCity(city.id));
-    svg.appendChild(g);
-  });
-}
-
-function buildBerlinMap(){
-  const svg=document.getElementById('berlinMap');
-  // Berlin shape (rough polygon)
-  const berlinPath=`M 185,90 L 240,75 L 295,82 L 340,110 L 360,150 L 355,200 L 365,250
-    L 345,295 L 310,330 L 265,350 L 210,345 L 165,320 L 140,275 L 135,225 L 148,175 L 160,125 Z`;
-  // Potsdam area (connected south-west)
-  const potsdamPath=`M 148,275 L 120,300 L 95,320 L 80,360 L 88,400 L 118,420 L 160,415 L 185,390 L 190,350 L 165,320 Z`;
-  // Brandenburg area (west)
-  const brandPath=`M 80,200 L 40,240 L 30,300 L 50,360 L 80,400 L 95,370 L 95,320 L 120,300 L 148,275 L 135,225 L 115,205 Z`;
-
-  svg.innerHTML=`<defs>
-    <radialGradient id="bg1" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#132030"/><stop offset="100%" stop-color="#0a1520"/></radialGradient>
-    <radialGradient id="bg2" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#0e1a2a"/><stop offset="100%" stop-color="#09111e"/></radialGradient>
-    <filter id="bglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="bsh"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="rgba(0,0,0,0.5)"/></filter>
-  </defs>
-  <path d="${brandPath}" fill="url(#bg2)" stroke="rgba(76,201,240,0.08)" stroke-width="1" filter="url(#bsh)"/>
-  <path d="${potsdamPath}" fill="url(#bg2)" stroke="rgba(76,201,240,0.1)" stroke-width="1"/>
-  <path d="${berlinPath}" fill="url(#bg1)" stroke="rgba(76,201,240,0.2)" stroke-width="1.5" filter="url(#bsh)"/>
-  <text x="245" y="218" text-anchor="middle" fill="rgba(76,201,240,0.15)" font-size="11" font-family="DM Mono,monospace">BERLIN</text>
-  <text x="148" y="375" text-anchor="middle" fill="rgba(76,201,240,0.1)" font-size="8" font-family="DM Mono,monospace">Potsdam</text>
-  <text x="70" y="305" text-anchor="middle" fill="rgba(76,201,240,0.1)" font-size="7" font-family="DM Mono,monospace">Brandenburg</text>
-  ${[100,150,200,250,300,350,400].map(y=>`<line x1="30" y1="${y}" x2="420" y2="${y}" stroke="rgba(255,255,255,0.015)" stroke-width="1"/>`).join('')}
-  <line x1="210" y1="75" x2="210" y2="420" stroke="rgba(255,255,255,0.015)" stroke-width="1"/>
-  <line x1="150" y1="75" x2="150" y2="420" stroke="rgba(255,255,255,0.015)" stroke-width="1"/>
-  <line x1="270" y1="75" x2="270" y2="420" stroke="rgba(255,255,255,0.015)" stroke-width="1"/>`;
-
-  BERLIN.forEach(city=>{
-    const r=7+(city.indianStudents/maxBerlin)*30;
-    const col=heatBerlin(city.indianStudents);
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.classList.add('city-bubble');
-    g.dataset.id=city.id;
-    g.innerHTML=`
-      <circle cx="${city.x}" cy="${city.y}" r="${r+7}" fill="${col}" opacity="0.09"/>
-      <circle class="inner" cx="${city.x}" cy="${city.y}" r="${r}" fill="${col}" opacity="0.88" filter="url(#bglow)"/>
-      <text x="${city.x}" y="${city.y+3}" text-anchor="middle" fill="rgba(0,0,0,0.65)" font-size="${Math.max(7,r*0.44)}" font-family="DM Mono,monospace" font-weight="600" pointer-events="none">${city.indianStudents>=1000?(city.indianStudents/1000).toFixed(1)+'k':city.indianStudents}</text>
-      <text x="${city.x}" y="${city.y+r+12}" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="8" font-family="DM Sans,sans-serif" pointer-events="none">${city.name.split('(')[0].trim().split(' ').slice(0,2).join(' ')}</text>`;
-    g.addEventListener('click',()=>selectCity(city.id));
-    svg.appendChild(g);
-  });
-}
-
-// ── DETAIL ───────────────────────────────────────────────────────────────────
-function renderDetail(city){
-  const panel=document.getElementById('detailPanel');
-  const pctNatl=((city.indianStudents/59419)*100).toFixed(1);
-  const regionTag=city.region==='nrw'?'NRW':'BERLIN';
-  const regionClass=city.region==='nrw'?'detail-nrw':'detail-berlin';
-  const accentColor=city.region==='nrw'?'var(--nrw)':'var(--berlin)';
-  const hf=city.region==='nrw'?heatNRW:heatBerlin;
-  panel.innerHTML=`
-    <div class="detail-hdr">
-      <div>
-        <div class="detail-city-name" style="color:${hf(city.indianStudents)}">${city.name}${city.confirmed?'<span style="font-size:12px;color:var(--teal);font-family:DM Mono,monospace;margin-left:8px">✓ confirmed</span>':''}</div>
-        <div class="detail-source">${city.source}</div>
-      </div>
-      <div class="detail-region-tag ${regionClass}">${regionTag}</div>
-    </div>
-    <div class="detail-grid">
-      <div class="dstat"><div class="dstat-num" style="color:${accentColor}">${city.indianStudents.toLocaleString()}</div><div class="dstat-label">INDIAN STUDENTS (EST.)</div></div>
-      <div class="dstat"><div class="dstat-num" style="color:var(--text2)">${city.totalIntl.toLocaleString()}</div><div class="dstat-label">TOTAL INTERNATIONAL</div></div>
-      <div class="dstat"><div class="dstat-num" style="color:var(--text2)">${city.pctIndian}%</div><div class="dstat-label">INDIAN SHARE OF INTL STUDENTS</div></div>
-    </div>
-    <div class="detail-info">
-      <div class="iblock">
-        <div class="iblock-title">Gender Split</div>
-        <div class="grow"><div class="glabel"><span>♂ Male</span><span>${city.gender.male}%</span></div><div class="gbar"><div class="gfill-m" style="width:${city.gender.male}%"></div></div></div>
-        <div class="grow"><div class="glabel"><span>♀ Female</span><span>${city.gender.female}%</span></div><div class="gbar"><div class="gfill-f" style="width:${city.gender.female}%"></div></div></div>
-        <div style="margin-top:8px;font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.6">${pctNatl}% of all Indians in Germany<br>Total students: ${city.totalStudents.toLocaleString()}</div>
-      </div>
-      <div class="iblock">
-        <div class="iblock-title">Top Courses</div>
-        <div class="clist">${city.courses.map(c=>`<div class="citem"><div class="cdot" style="background:${accentColor}"></div>${c}</div>`).join('')}</div>
-      </div>
-      <div class="iblock">
-        <div class="iblock-title">Universities</div>
-        <div class="ulist">${city.universities.map(u=>`<div class="uitem"><span>🎓</span>${u}</div>`).join('')}</div>
-      </div>
-      <div class="iblock">
-        <div class="iblock-title">Notes</div>
-        <div style="font-size:10px;color:var(--text2);line-height:1.6">${city.notes}</div>
-      </div>
-    </div>`;
-}
-
-// ── SELECT ────────────────────────────────────────────────────────────────────
-function selectCity(id){
-  selectedCity=id;
-  const city=ALL.find(c=>c.id===id);
-  document.querySelectorAll('.city-card').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
-  document.querySelectorAll('.city-bubble').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
-  const card=document.querySelector(`.city-card[data-id="${id}"]`);
-  if(card)card.scrollIntoView({behavior:'smooth',block:'nearest'});
-  renderDetail(city);
-}
-
-// ── FILTER ────────────────────────────────────────────────────────────────────
-function filterRegion(r){
-  currentFilter=r;
-  document.getElementById('pillBoth').classList.toggle('active',r==='both');
-  document.getElementById('pillNRW').classList.toggle('active',r==='nrw');
-  document.getElementById('pillBerlin').classList.toggle('active',r==='berlin');
-  document.getElementById('nrwPane').style.display=(r==='berlin')?'none':'flex';
-  document.getElementById('berlinPane').style.display=(r==='nrw')?'none':'flex';
-  document.querySelector('.maps-row').style.gridTemplateColumns=
-    r==='both'?'1fr 1fr':r==='nrw'?'1fr 0':'0 1fr';
-  buildSidebar(document.getElementById('searchBox').value);
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-document.getElementById('searchBox').addEventListener('input',e=>buildSidebar(e.target.value));
-buildSidebar();
-buildNRWMap();
-buildBerlinMap();
-setTimeout(()=>selectCity('aachen'),150);
-</script>
+<script src="js/geo-germany.js"></script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
