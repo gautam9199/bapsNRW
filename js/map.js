@@ -64,7 +64,9 @@ const MapView = {
 
     const statesLayer = svgEl('g', {}, this.layer);
     const labelsLayer = svgEl('g', {}, this.layer);
+    this.bubbleLayer = svgEl('g', {}, this.layer);
     this.markerLayer = svgEl('g', {}, this.layer);
+    this.anchors = {};
     const byId = Object.fromEntries(STATES.map(s => [s.id, s]));
 
     GERMANY_STATES.forEach(geo => {
@@ -95,6 +97,7 @@ const MapView = {
 
       const mainland = geo.polygons.reduce((a, b) => b.length > a.length ? b : a);
       let [cLon, cLat] = ringCentroid(mainland);
+      this.anchors[geo.id] = project(cLon, cLat);   // un-nudged: where packed bubbles centre
       const nudge = LABEL_NUDGE[geo.id];
       if (nudge) { cLon += nudge[0]; cLat += nudge[1]; }
       const [lx, ly] = project(cLon, cLat);
@@ -111,7 +114,7 @@ const MapView = {
     new ResizeObserver(() => this.applyTransform(false)).observe(this.svg);
   },
 
-  renderLegend() {
+  renderLegend(id) {
     const el = document.getElementById('mapLegend');
     el.replaceChildren();
     const title = document.createElement('div');
@@ -129,8 +132,16 @@ const MapView = {
     nd.className = 'legend-nodata';
     nd.append(document.createElement('i'), document.createTextNode('No official figure'));
     const uni = document.createElement('span'); uni.className = 'uni';
-    nd.append(uni, document.createTextNode('University figure'));
+    nd.append(uni, document.createTextNode('Indian figure (university)'));
     el.append(title, scale, nd);
+    const set = id && CITIES[id];
+    if (set) {
+      const b = document.createElement('div');
+      b.className = 'legend-nodata';
+      const ring = document.createElement('span'); ring.className = 'bubble-key';
+      b.append(ring, document.createTextNode(`Foreign students per ${set.mode === 'unis' ? 'university' : 'town'} (all countries), ${META.latestSemester}`));
+      el.append(b);
+    }
   },
 
   // ── selection ──
@@ -141,9 +152,51 @@ const MapView = {
       p.classList.toggle('is-dim', dim);
       p.classList.toggle('is-active', sid === id);
       this.labels[sid].querySelectorAll('.state-label').forEach(t => t.classList.toggle('is-dim', dim));
+      // the selected state's own label would sit under its bubbles; the panel carries the number
+      this.labels[sid].classList.toggle('is-hidden', sid === id && !!CITIES[id]);
     });
+    this.drawBubbles(id);
     this.drawMarkers(id);
+    this.renderLegend(id);
     this.fit(id, true);
+  },
+
+  // Foreign students (all nationalities) per university town — or per
+  // university in the city-states, packed around the city since Destatis
+  // gives no campus coordinates there. Area ∝ students, sized within the state.
+  drawBubbles(id) {
+    this.bubbleLayer.replaceChildren();
+    const set = id && CITIES[id];
+    if (!set) return;
+    const maxF = Math.max(...set.items.map(c => c.f[2]));
+    const maxR = Math.max(18, Math.min(30, 30 * this.svg.clientWidth / 480));   // smaller on phones
+    const radius = f => Math.max(3, maxR * Math.sqrt(f / maxF));
+    let placed = set.items.map(c => ({ c, r: radius(c.f[2]), dx: 0, dy: 0 }));
+    if (set.mode === 'unis') {
+      const [ax, ay] = this.anchors[id];
+      placed = packCircles(placed).map(p => ({ ...p, x: ax, y: ay }));
+    } else {
+      placed.forEach(p => { [p.x, p.y] = project(p.c.lon, p.c.lat); });
+    }
+    placed.sort((a, b) => b.r - a.r).forEach((p, i) => {
+      const c = p.c;
+      const g = svgEl('g', { class: 'bubble', transform: `translate(${p.x},${p.y})`, tabindex: 0, role: 'img',
+        'aria-label': `${c.n}: ${fmt(c.f[2])} foreign students` }, this.bubbleLayer);
+      const inner = svgEl('g', { class: 'label-scale' }, g);
+      svgEl('circle', { class: 'bubble-hit', cx: p.dx, cy: p.dy, r: Math.max(p.r, 12) }, inner);
+      svgEl('circle', { class: 'bubble-dot' + (c.d ? ' is-distance' : ''), cx: p.dx, cy: p.dy, r: p.r }, inner);
+      if (set.mode === 'unis') {
+        // packed: abbreviation inside the bubble when it fits, otherwise tooltip only
+        if (c.a && p.r >= 11 + c.a.length * 2.2) svgText(inner, c.a, { class: 'bubble-inlabel', x: p.dx, y: p.dy });
+      } else if (i < 8) {
+        svgText(inner, c.n, { class: 'bubble-label', x: p.dx, y: p.dy - p.r - 5 });
+      }
+      const tip = bubbleTip(c);
+      g.addEventListener('pointermove', e => Tooltip.show(tip, { x: e.clientX, y: e.clientY }));
+      g.addEventListener('pointerleave', () => Tooltip.hide());
+      g.addEventListener('focus', () => Tooltip.show(tip, Tooltip.posFor(g)));
+      g.addEventListener('blur', () => Tooltip.hide());
+    });
   },
 
   drawMarkers(id) {
@@ -176,9 +229,10 @@ const MapView = {
       x0: Math.min(...all.map(s => s.x0)), y0: Math.min(...all.map(s => s.y0)),
       x1: Math.max(...all.map(s => s.x1)), y1: Math.max(...all.map(s => s.y1)),
     };
-    const pad = id ? { x: 60, top: 70, bottom: 50 } : { x: 24, top: 60, bottom: 16 };
+    // states leave room for edge bubbles (≤30px) and their labels
+    const pad = id ? { x: 85, top: 80, bottom: 55 } : { x: 24, top: 60, bottom: 16 };
     const availH = VIEW_H - pad.top - pad.bottom;
-    const k = Math.min(9, (VIEW_W - pad.x * 2) / (b.x1 - b.x0), availH / (b.y1 - b.y0));
+    const k = Math.min(16, (VIEW_W - pad.x * 2) / (b.x1 - b.x0), availH / (b.y1 - b.y0));
     const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
     this.t = { k, x: VIEW_W / 2 - k * cx, y: pad.top + availH / 2 - k * cy };
     this.applyTransform(animated);
@@ -191,10 +245,24 @@ const MapView = {
     // regardless of zoom level or how large the map is rendered
     const inv = `scale(${1 / (this.t.k * this.pxScale())})`;
     this.layer.querySelectorAll('.label-scale').forEach(el => { el.style.transform = inv; });
+    // labels are fixed-size while distances scale, so re-check overlaps once the camera settles
+    clearTimeout(this.declutterTimer);
+    this.declutterTimer = setTimeout(() => this.declutter(), animated ? 650 : 60);
+  },
+
+  // Show bubble labels largest-first, hiding any that would overlap one already shown.
+  declutter() {
+    const shown = [];
+    this.bubbleLayer.querySelectorAll('.bubble-label').forEach(t => {
+      t.classList.remove('is-hidden');
+      const r = t.getBoundingClientRect();
+      const hit = shown.some(s => r.left < s.right + 4 && r.right > s.left - 4 && r.top < s.bottom + 2 && r.bottom > s.top - 2);
+      if (hit) t.classList.add('is-hidden'); else shown.push(r);
+    });
   },
 
   zoomBy(factor, px, py, animated) {
-    const k = Math.min(Math.max(this.t.k * factor, 0.8), 14);
+    const k = Math.min(Math.max(this.t.k * factor, 0.8), 24);
     const r = k / this.t.k;
     this.t = { k, x: px - r * (px - this.t.x), y: py - r * (py - this.t.y) };
     this.applyTransform(animated);
@@ -252,6 +320,38 @@ const MapView = {
 
 function compactNum(n) {
   return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n);
+}
+
+// Greedy circle packing on an outward spiral (screen px); largest sits at the centre.
+function packCircles(items, gap = 3) {
+  const out = [];
+  items.slice().sort((a, b) => b.r - a.r).forEach(it => {
+    for (let t = 0, n = 0; n < 20000; t += 0.05, n++) {
+      const d = 2.2 * t, x = d * Math.cos(t), y = d * Math.sin(t);
+      if (out.every(p => Math.hypot(p.dx - x, p.dy - y) >= p.r + it.r + gap)) { out.push({ ...it, dx: x, dy: y }); return; }
+    }
+  });
+  return out;
+}
+
+// First available semester → latest, for trend text
+const SEM_LABELS = ['WS 2023/24', 'WS 2024/25', 'WS 2025/26'];
+function trendOf(f) {
+  const i = f.findIndex(v => v != null && v > 0);
+  if (i < 0 || i === f.length - 1) return null;
+  const from = f[i], to = f[f.length - 1];
+  return { from, to, since: SEM_LABELS[i], pct: 100 * (to - from) / from };
+}
+
+function bubbleTip(c) {
+  const lines = [{ value: `${fmt(c.f[2])} foreign students`, label: `${c.n} · ${META.latestSemester}`, key: true }];
+  lines.push({ label: `${pct(c.f[2], c.s)} of ${fmt(c.s)} students` });
+  const t = trendOf(c.f);
+  if (t) lines.push({ label: `${t.pct >= 0 ? '▲ +' : '▼ '}${t.pct.toFixed(0)}% since ${t.since} (${fmt(t.from)} → ${fmt(t.to)})` });
+  if (t && t.pct > 300) lines.push({ label: 'A jump this large usually reflects a change in where enrolment is reported.' });
+  if (c.u && c.u.length) lines.push({ label: 'Largest: ' + c.u.slice(0, 2).map(u => `${u[0]} (${fmt(u[1])})`).join(', ') });
+  if (c.d) lines.push({ label: 'Mostly distance-learning enrolment — students are not necessarily in this town.' });
+  return lines;
 }
 
 function stateTip(st) {

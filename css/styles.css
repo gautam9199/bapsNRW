@@ -121,6 +121,16 @@ section{padding:32px 0 8px;}
 .state-label{font-family:var(--font-ui);font-size:10px;font-weight:600;pointer-events:none;text-anchor:middle;dominant-baseline:middle;letter-spacing:.3px;transition:opacity .3s;}
 .state-label.is-dim{opacity:0.3;}
 
+.bubble{cursor:pointer;}
+.bubble:focus{outline:none;}
+.bubble-hit{fill:transparent;}
+.bubble-dot{fill:rgba(9,13,24,0.6);stroke:#eef0f5;stroke-width:1.25px;transition:fill .15s,stroke .15s;}
+.bubble-dot.is-distance{fill:none;stroke:var(--text-muted);}
+.bubble:hover .bubble-dot,.bubble:focus-visible .bubble-dot{fill:rgba(9,13,24,0.85);stroke:var(--accent);stroke-width:2px;}
+.bubble-label{font-family:var(--font-ui);font-size:11px;font-weight:600;fill:var(--text-primary);text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#05080f;stroke-width:3px;stroke-linejoin:round;}
+.bubble-inlabel{font-family:var(--font-ui);font-size:10px;font-weight:600;fill:var(--text-primary);text-anchor:middle;dominant-baseline:central;pointer-events:none;}
+.is-hidden{display:none;}
+.legend-nodata .bubble-key{width:12px;height:12px;border-radius:50%;border:1.25px solid var(--text-primary);background:rgba(9,13,24,0.6);margin-left:0;}
 .uni-marker{cursor:pointer;}
 .uni-marker .ring{fill:var(--surface-1);}
 .uni-marker .dot{fill:var(--text-primary);}
@@ -170,6 +180,9 @@ section{padding:32px 0 8px;}
 .list-item .val{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;}
 .list-item .meta{grid-column:1 / -1;font-size:12px;color:var(--text-muted);}
 .list-item .meta a{color:var(--text-muted);}
+.list-item.town{grid-template-columns:minmax(0,1fr) auto auto;}
+.list-item .trend{display:inline-flex;align-items:center;gap:6px;justify-self:end;}
+.list-item .chg{font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums;min-width:36px;text-align:right;}
 .inline-bar{grid-column:1 / -1;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;}
 .inline-bar span{display:block;height:100%;background:var(--deemph);border-radius:2px;}
 .note{font-size:13px;color:var(--text-secondary);padding:10px 12px;border-left:2px solid var(--accent);background:var(--surface-2);border-radius:0 8px 8px 0;}

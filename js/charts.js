@@ -113,6 +113,7 @@ function drawBars(container, rows, opts = {}) {
   const plotW = Math.max(40, width - labelW - valueW);
 
   const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, width, height, role: 'list' });
+  container.replaceChildren(svg);   // attached first so labels can be measured
   rows.forEach((r, i) => {
     const y = i * rowH;
     const g = svgEl('g', { class: 'bar-row' + (opts.activeKey === r.key ? ' is-active' : ''), role: 'listitem' }, svg);
@@ -121,7 +122,12 @@ function drawBars(container, rows, opts = {}) {
     g.setAttribute('aria-label', desc);
 
     svgEl('rect', { class: 'hit', x: 0, y, width, height: rowH }, g);
-    svgText(g, r.label, { class: 'bar-label', x: labelW - 10, y: y + rowH / 2, 'text-anchor': 'end', 'dominant-baseline': 'middle' });
+    const lbl = svgText(g, r.label, { class: 'bar-label', x: labelW - 10, y: y + rowH / 2, 'text-anchor': 'end', 'dominant-baseline': 'middle' });
+    // never let a label run past the chart's left edge: shorten with an ellipsis (full text in tooltip)
+    for (let s = r.label; lbl.getComputedTextLength() > labelW - 12 && s.length > 4;) {
+      s = s.slice(0, -2).trim();
+      lbl.textContent = s + '…';
+    }
 
     if (r.value != null) {
       const w = Math.max(2, plotW * r.value / max);
@@ -142,7 +148,6 @@ function drawBars(container, rows, opts = {}) {
       g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opts.onSelect(r.key); } });
     }
   });
-  container.replaceChildren(svg);
 }
 
 // ── Line + area trend with crosshair tooltip ────────────────────────────────

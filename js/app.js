@@ -16,6 +16,20 @@ function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+// Three-point trend line (WS 23/24 → 25/26), scaled to its own range; the
+// latest point is the accent dot. Missing early semesters are skipped.
+function sparkline(f) {
+  const pts = f.map((v, i) => [i, v]).filter(([, v]) => v != null && v > 0);
+  const svg = svgEl('svg', { width: 46, height: 16, viewBox: '0 0 46 16', 'aria-hidden': 'true' });
+  if (pts.length < 2) return svg;
+  const vs = pts.map(p => p[1]), lo = Math.min(...vs), hi = Math.max(...vs);
+  const x = i => 4 + i * 19, y = v => hi === lo ? 8 : 13 - 10 * (v - lo) / (hi - lo);
+  svgEl('polyline', { points: pts.map(([i, v]) => `${x(i)},${y(v)}`).join(' '), fill: 'none', stroke: 'var(--deemph)', 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, svg);
+  const [li, lv] = pts[pts.length - 1];
+  svgEl('circle', { cx: x(li), cy: y(lv), r: 2.5, fill: 'var(--accent)' }, svg);
+  return svg;
+}
+
 function sourceLink(key, text) {
   const s = SOURCES[key];
   return h('a', { href: s.url, target: '_blank', rel: 'noopener' }, text || s.publisher);
@@ -278,15 +292,31 @@ function renderStatePanel(st) {
           u.note ? ` · ${u.note}` : '', ' · ', sourceLink(u.source, 'source')))))));
   }
 
-  const maxF = Math.max(...st.topForeign.map(u => u.foreign));
-  blocks.push(h('div', {},
-    h('div', { class: 'subhead' }, `Universities with the most foreign students (all countries) · ${N.latest.semester}`),
-    h('div', { class: 'list' }, st.topForeign.map(u => h('div', { class: 'list-item' },
-      h('span', { class: 'name' }, u.name),
-      h('span', { class: 'val' }, fmt(u.foreign)),
-      h('span', { class: 'inline-bar' }, h('span', { style: `width:${100 * u.foreign / maxF}%` })),
-      h('span', { class: 'meta' }, `${pct(u.foreign, u.students, 0)} of ${fmt(u.students)} students`)))),
-    h('div', { class: 'source-line' }, 'Context figures: ', sourceLink('destatis-2526'), ' · ', sourceLink('wiwe-2026'))));
+  const set = CITIES[st.id];
+  if (set) {
+    const items = set.items.slice(0, 8);
+    const maxF = Math.max(...items.map(c => c.f[2]));
+    blocks.push(h('div', {},
+      h('div', { class: 'subhead' }, `${set.mode === 'unis' ? 'Universities' : 'University towns'} by foreign students (all countries) · ${N.latest.semester}`),
+      h('div', { class: 'list' }, items.map(c => {
+        const t = trendOf(c.f);
+        return h('div', { class: 'list-item town' },
+          h('span', { class: 'name' }, c.n),
+          h('span', { class: 'val' }, fmt(c.f[2])),
+          h('span', { class: 'trend' }, sparkline(c.f),
+            t ? h('span', { class: 'chg' }, `${t.pct >= 0 ? '+' : '−'}${Math.abs(t.pct).toFixed(0)}%`) : null),
+          h('span', { class: 'inline-bar' }, h('span', { style: `width:${100 * c.f[2] / maxF}%` })),
+          h('span', { class: 'meta' },
+            `${pct(c.f[2], c.s, 0)} of ${fmt(c.s)} students`,
+            t ? ` · ${fmt(t.from)} in ${t.since}` : '',
+            c.u && c.u.length ? ` · largest: ${c.u[0][0]}` : '',
+            c.d ? ' · mostly distance learning' : '',
+            t && t.pct > 300 ? ' · jump this large usually reflects a change in where enrolment is reported' : ''));
+      })),
+      h('div', { class: 'source-line' }, 'These are all foreign students, not only Indian ones — no official source breaks towns down by nationality. ',
+        'Sources: ', CITY_SOURCES.map((k, i) => [i ? ' · ' : '', sourceLink(k)]))));
+  }
+  blocks.push(h('div', { class: 'source-line' }, 'State context figures: ', sourceLink('destatis-2526'), ' · ', sourceLink('wiwe-2026')));
 
   panel.replaceChildren(...blocks);
 }
@@ -296,9 +326,9 @@ function selectState(id, { fromHash = false } = {}) {
   if (id && !stateById[id]) id = null;
   activeState = id;
   MapView.select(id);
-  document.getElementById('mapTitle').replaceChildren(
+  document.getElementById('mapTitle').replaceChildren(...[
     h('strong', {}, id ? stateById[id].en : 'Germany'),
-    id ? null : h('span', { class: 'map-sub' }, ` · Indian students by state, ${baseline.semester}`));
+    id ? null : h('span', { class: 'map-sub' }, ` · Indian students by state, ${baseline.semester}`)].filter(Boolean));
   if (id) renderStatePanel(stateById[id]); else renderOverviewPanel();
   document.querySelectorAll('#statePicker .chip').forEach(c => c.setAttribute('aria-pressed', String((c.dataset.id || null) === id)));
   redraws.forEach(r => r());
@@ -313,7 +343,8 @@ function renderMethod() {
     ['Official sources only. ', 'National figures come from the Federal Statistical Office (Destatis). State figures come from each state’s statistical office. University figures come from the universities’ own published statistics. Nothing on this page is estimated or taken from agencies or rankings sites.'],
     ['Why some states are blank. ', `Destatis does not publish nationality by state, and for ${16 - withFigure.length} states no official India figure could be found — their published statistics give foreign students only as a total. Those states show “not published”; their combined total (${fmt(remainder)} in ${baseline.semester}, together with Thuringia) is derived from the national figure.`],
     ['Comparing states. ', `The map and ranking use ${baseline.semester}, the newest semester most states have published. Bavaria and Saxony already released ${META.latestSemester}; those newer numbers appear alongside. Thuringia’s newest breakdown is ${stateById.TH.india.base.sem}.`],
-    ['Where a student is counted. ', 'Students count in the state where their university is registered, not where they live. IU International University, registered in Erfurt, puts its students at campuses in other states into Thuringia’s numbers.'],
+    ['Town bubbles. ', 'When a state is selected, bubbles show foreign students of all nationalities per university town (per university in Berlin, Hamburg and Saarland), from Destatis’ per-campus tables for the last three winter semesters. No official source splits towns by nationality, so they show where international students concentrate — not Indian students specifically. Hollow bubbles are mostly distance-learning enrolment.'],
+    ['Where a student is counted. ','Students count in the state where their university is registered, not where they live. IU International University, registered in Erfurt, puts its students at campuses in other states into Thuringia’s numbers.'],
   ];
   document.getElementById('methodList').replaceChildren(...items.map(([b, t]) => h('li', {}, h('strong', {}, b), t)));
   document.getElementById('sourceList').replaceChildren(...Object.entries(SOURCES).map(([key, s]) =>
