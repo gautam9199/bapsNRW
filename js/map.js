@@ -123,12 +123,14 @@ const MapView = {
     const ticks = document.createElement('div');
     ticks.className = 'legend-ticks';
     ['0', '1k', '3k', '5k', '8k', ''].forEach(t => { const s = document.createElement('span'); s.textContent = t; ticks.appendChild(s); });
+    const scale = document.createElement('div');
+    scale.append(row, ticks);
     const nd = document.createElement('div');
     nd.className = 'legend-nodata';
     nd.append(document.createElement('i'), document.createTextNode('No official figure'));
     const uni = document.createElement('span'); uni.className = 'uni';
     nd.append(uni, document.createTextNode('University figure'));
-    el.append(title, row, ticks, nd);
+    el.append(title, scale, nd);
   },
 
   // ── selection ──
@@ -167,11 +169,18 @@ const MapView = {
 
   // ── camera ──
   fit(id, animated) {
-    const b = id ? this.bboxes[id] : { x0: 20, y0: 20, x1: VIEW_W - 20, y1: VIEW_H - 20 };
-    const pad = id ? 60 : 0;
-    const k = Math.min(9, Math.min((VIEW_W - pad * 2) / (b.x1 - b.x0), (VIEW_H - pad * 2) / (b.y1 - b.y0)));
+    // Whole-country view: the union of all states, kept clear of the title
+    // overlay at the top of the frame.
+    const all = Object.values(this.bboxes);
+    const b = id ? this.bboxes[id] : {
+      x0: Math.min(...all.map(s => s.x0)), y0: Math.min(...all.map(s => s.y0)),
+      x1: Math.max(...all.map(s => s.x1)), y1: Math.max(...all.map(s => s.y1)),
+    };
+    const pad = id ? { x: 60, top: 70, bottom: 50 } : { x: 24, top: 60, bottom: 16 };
+    const availH = VIEW_H - pad.top - pad.bottom;
+    const k = Math.min(9, (VIEW_W - pad.x * 2) / (b.x1 - b.x0), availH / (b.y1 - b.y0));
     const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-    this.t = { k, x: VIEW_W / 2 - k * cx, y: VIEW_H / 2 - k * cy };
+    this.t = { k, x: VIEW_W / 2 - k * cx, y: pad.top + availH / 2 - k * cy };
     this.applyTransform(animated);
   },
 

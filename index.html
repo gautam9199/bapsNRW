@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+<!-- Bump ?v= on every release (CSS and all scripts) so browsers don't mix cached old files with new HTML -->
+<link rel="stylesheet" href="css/styles.css?v=2">
 </head>
 <body>
 
@@ -107,10 +108,8 @@
                 <button class="map-btn" id="zoomResetBtn" type="button" aria-label="Show all of Germany">⤢</button>
               </div>
             </div>
-            <div class="map-overlay bottom">
-              <div class="legend" id="mapLegend"></div>
-            </div>
           </div>
+          <div class="legend" id="mapLegend"></div>
         </div>
 
         <div class="card panel" id="statePanel" aria-live="polite"></div>
@@ -143,10 +142,10 @@
 
 <div class="tooltip" id="tooltip" role="status"></div>
 
-<script src="js/geo-germany.js"></script>
-<script src="js/data.js"></script>
-<script src="js/charts.js"></script>
-<script src="js/map.js"></script>
-<script src="js/app.js"></script>
+<script src="js/geo-germany.js?v=2"></script>
+<script src="js/data.js?v=2"></script>
+<script src="js/charts.js?v=2"></script>
+<script src="js/map.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
 </body>
 </html>
