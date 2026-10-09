@@ -3,133 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Indian Students — NRW & Berlin | Interactive Heatmap</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Indian Students in Germany — State-by-State Dashboard</title>
+<meta name="description" content="Official enrolment figures for students with Indian citizenship at German universities, for Germany as a whole and each of the 16 federal states.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<div class="header">
-  <div class="header-top">
+<header class="topbar">
+  <div class="wrap">
     <div>
-      <div class="header-label">Interactive Heatmap · Germany · WS 2024/25</div>
-      <h1>Indian Students in Germany<br><span style="-webkit-text-fill-color:var(--nrw)">NRW</span> <span style="-webkit-text-fill-color:rgba(255,255,255,0.3);font-size:0.7em">&amp;</span> <span style="-webkit-text-fill-color:var(--berlin)">Berlin</span></h1>
-      <div class="header-sub">Two of Germany's largest student regions — plotted on a single zoomable map. Data from DAAD, Destatis, Berlin-Brandenburg Statistics Office, university press releases.</div>
+      <div class="eyebrow">Official statistics · All 16 federal states</div>
+      <h1>Indian Students in Germany</h1>
+      <p class="lede">How many students with Indian citizenship study in Germany, how fast that is growing, and where they are enrolled — using figures published by federal and state statistical offices and universities.</p>
     </div>
-    <div class="region-pills">
-      <div class="region-pill pill-both active" id="pillBoth" onclick="filterRegion('both')"><span class="pill-dot" style="background:linear-gradient(135deg,var(--nrw),var(--berlin))"></span>Both Regions</div>
-      <div class="region-pill pill-nrw" id="pillNRW" onclick="filterRegion('nrw')"><span class="pill-dot" style="background:var(--nrw)"></span>NRW Only</div>
-      <div class="region-pill pill-berlin" id="pillBerlin" onclick="filterRegion('berlin')"><span class="pill-dot" style="background:var(--berlin)"></span>Berlin Only</div>
+    <div class="data-badge">
+      <span>Latest national data: <strong id="badgeSemester"></strong></span>
+      <span>Page updated <strong id="badgeUpdated"></strong></span>
     </div>
   </div>
-  <div class="header-stats">
-    <div class="hstat"><div class="hstat-num" style="color:var(--accent)">~59,400</div><div class="hstat-label">INDIANS IN GERMANY (2024/25)</div></div>
-    <div class="hdivider"></div>
-    <div class="hstat"><div class="hstat-num" style="color:var(--nrw)">~14,800</div><div class="hstat-label">IN NRW (≈25% — 22 CITIES)</div></div>
-    <div class="hdivider"></div>
-    <div class="hstat"><div class="hstat-num" style="color:var(--berlin)">~4,200</div><div class="hstat-label">IN BERLIN REGION (≈7% — 9 ZONES)</div></div>
-    <div class="hdivider"></div>
-    <div class="hstat"><div class="hstat-num" style="color:#ffd166">200,852</div><div class="hstat-label">TOTAL BERLIN STUDENTS (WS 2024/25)</div></div>
-    <div class="hdivider"></div>
-    <div class="hstat"><div class="hstat-num" style="color:#ffd166">49,801</div><div class="hstat-label">INTL STUDENTS IN BERLIN (24.8%)</div></div>
-  </div>
-</div>
+</header>
 
-<!-- Comparison strip -->
-<div class="compare-strip">
-  <div class="cstrip-item">
-    <div class="cstrip-label">INDIAN STUDENTS (ESTIMATED)</div>
-    <div class="cstrip-bars">
-      <div class="cstrip-bar" style="background:var(--nrw);width:120px"></div>
-      <span class="cstrip-val nrw-color">NRW ~14,800</span>
-      <div class="cstrip-bar" style="background:var(--berlin);width:34px"></div>
-      <span class="cstrip-val berlin-color">Berlin ~4,200</span>
-    </div>
-  </div>
-  <div class="cstrip-item">
-    <div class="cstrip-label">TOP CONFIRMED UNIVERSITY</div>
-    <div style="display:flex;gap:16px;margin-top:3px">
-      <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--nrw)">RWTH Aachen: 2,366 Indians ✓</span>
-      <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--berlin)">TU Berlin: ~1,800 Indians (est.)</span>
-    </div>
-  </div>
-  <div class="cstrip-item">
-    <div class="cstrip-label">GENDER SPLIT (INDIAN STUDENTS)</div>
-    <div style="display:flex;gap:16px;margin-top:3px">
-      <span style="font-size:10px;font-family:'DM Mono',monospace;color:#4cc9f0">♂ ~70% Male</span>
-      <span style="font-size:10px;font-family:'DM Mono',monospace;color:#f72585">♀ ~30% Female (national avg.)</span>
-    </div>
-  </div>
-</div>
+<main>
+  <!-- ── GERMANY AT A GLANCE ── -->
+  <section id="overview">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Germany at a glance</h2>
+        <p id="overviewNote"></p>
+      </div>
+      <div class="kpis" id="kpis"></div>
 
-<div class="main">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-title">31 locations · click to explore</div>
-      <input class="search-box" id="searchBox" type="text" placeholder="Filter cities or universities…">
-    </div>
-    <div id="cityList"></div>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="right-panel">
-    <!-- MAP -->
-    <div class="maps-row">
-      <div class="map-pane" id="germanyPane">
-        <div class="map-label">Germany · scroll to zoom, drag to pan</div>
-        <div class="map-count" id="mapCount">31 locations</div>
-        <svg id="germanyMap"><g id="mapLayer"></g></svg>
-        <div class="map-tooltip" id="mapTooltip"></div>
-        <div class="map-controls">
-          <button class="map-ctrl-btn" id="zoomInBtn" title="Zoom in">+</button>
-          <button class="map-ctrl-btn" id="zoomOutBtn" title="Zoom out">−</button>
-          <button class="map-ctrl-btn map-ctrl-reset" id="zoomResetBtn" title="Reset view">⤢</button>
-        </div>
-        <div class="map-legend">
-          <div class="map-legend-col">
-            <div class="map-legend-title">NRW · Indians</div>
-            <div class="legend-swatches">
-              <div class="ls" style="background:#c8dde8"></div>
-              <div class="ls" style="background:#fff3c4"></div>
-              <div class="ls" style="background:#ffd166"></div>
-              <div class="ls" style="background:#f7931e"></div>
-              <div class="ls" style="background:#e85d04"></div>
-              <div class="ls" style="background:#9b2c2c"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Indian students by federal state</div>
+              <div class="card-sub" id="rankSub"></div>
             </div>
-            <div class="legend-minmax"><span>&lt;100</span><span>500</span><span>1k</span><span>2k+</span></div>
+            <div class="view-toggle" role="group" aria-label="View">
+              <button type="button" data-view="chart" aria-pressed="true">Chart</button>
+              <button type="button" data-view="table" aria-pressed="false">Table</button>
+            </div>
           </div>
-          <div class="map-legend-col">
-            <div class="map-legend-title">Berlin · Indians</div>
-            <div class="legend-swatches">
-              <div class="ls" style="background:#c8dde8"></div>
-              <div class="ls" style="background:#a8d8f0"></div>
-              <div class="ls" style="background:#4cc9f0"></div>
-              <div class="ls" style="background:#0099cc"></div>
-              <div class="ls" style="background:#006699"></div>
-              <div class="ls" style="background:#003355"></div>
-            </div>
-            <div class="legend-minmax"><span>&lt;50</span><span>200</span><span>500</span><span>1k+</span></div>
+          <div class="chart" id="rankChart"></div>
+          <div id="rankTable" hidden></div>
+          <div class="source-line" id="rankFoot"></div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="card-title">Growth since 2013/14</div>
+            <div class="card-sub">Students with Indian citizenship, all German universities, winter semesters</div>
+            <div class="chart fill" id="trendChart"></div>
+            <div class="source-line" id="trendFoot"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Degrees completed</div>
+            <div class="card-sub">Exams passed by Indian nationals, by exam year</div>
+            <div class="chart fill" id="gradChart"></div>
+            <div class="source-line" id="gradFoot"></div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- DETAIL -->
-    <div class="detail-panel" id="detailPanel">
-      <div class="detail-empty">← Select any city from the list or click a bubble on the map</div>
+      <div class="grid-2 even">
+        <div class="card">
+          <div class="card-title">What they study</div>
+          <div class="card-sub" id="subjectSub"></div>
+          <div class="chart" id="subjectChart" style="margin-top:14px"></div>
+          <div class="source-line" id="subjectFoot"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Largest countries of origin</div>
+          <div class="card-sub" id="originSub"></div>
+          <div class="chart" id="originChart" style="margin-top:14px"></div>
+          <div class="source-line" id="originFoot"></div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<div style="padding:8px 48px 14px;background:var(--bg2);border-top:1px solid var(--border)">
-  <div class="note-bar">
-    <strong>Data notes:</strong> Confirmed: RWTH Aachen (2,366 Indians — Dec 2024), TU Dortmund (466 — Mar 2025), Berlin total intl students 49,801 / 24.8% of 200,852 (Amt für Statistik Berlin-Brandenburg, WS 2024/25). TU Berlin: 10,000+ foreign nationals enrolled (Shiksha/TU Berlin, WS 2024/25); India estimated as 2nd largest group after China (~18% of intl = ~1,800). All other figures are weighted estimates using DAAD national data (59,419 Indian students, WS 2024/25), regional shares, and university-level international ratios. Berlin region share estimated at ~7% of national Indian total based on Berlin's 24.8% overall international student share × India's national prominence, scaled for German-language requirement barriers at HU/FU. Gender: national DAAD average (~70% male / 30% female). Map: state boundaries are simplified administrative borders from the open-source isellsoap/deutschlandGeoJSON project (derived from DIVA-GIS public data), not survey-grade GIS. <strong>Sources: DAAD 2024, Destatis, Amt für Statistik Berlin-Brandenburg, RWTH Aachen, TU Dortmund, TU Berlin, Shiksha, isellsoap/deutschlandGeoJSON.</strong>
-  </div>
-</div>
+  <!-- ── EXPLORE BY STATE ── -->
+  <section id="explore">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Explore one state at a time</h2>
+        <p>Click a state on the map, a bar above, or a name below.</p>
+      </div>
+      <div class="state-picker" id="statePicker" role="group" aria-label="Choose a state"></div>
+
+      <div class="explorer">
+        <div class="card map-card">
+          <div class="map-frame">
+            <svg id="germanyMap" role="img" aria-label="Map of Germany's federal states shaded by number of Indian students"><g id="mapLayer"></g></svg>
+            <div class="map-overlay top">
+              <div class="map-title" id="mapTitle"></div>
+              <div class="map-controls">
+                <button class="map-btn" id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+                <button class="map-btn" id="zoomOutBtn" type="button" aria-label="Zoom out">−</button>
+                <button class="map-btn" id="zoomResetBtn" type="button" aria-label="Show all of Germany">⤢</button>
+              </div>
+            </div>
+            <div class="map-overlay bottom">
+              <div class="legend" id="mapLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card panel" id="statePanel" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── METHOD & SOURCES ── -->
+  <section id="sources">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How these numbers work</h2>
+      </div>
+      <div class="method">
+        <div class="card">
+          <ul id="methodList"></ul>
+        </div>
+        <div class="card">
+          <div class="subhead">Sources</div>
+          <ul class="source-list" id="sourceList"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Map boundaries: isellsoap/deutschlandGeoJSON (DIVA-GIS public data), simplified. Built as a static page — no tracking, no cookies.</div>
+</footer>
+
+<div class="tooltip" id="tooltip" role="status"></div>
 
 <script src="js/geo-germany.js"></script>
 <script src="js/data.js"></script>
+<script src="js/charts.js"></script>
 <script src="js/map.js"></script>
 <script src="js/app.js"></script>
 </body>
